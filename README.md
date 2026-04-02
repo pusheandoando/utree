@@ -15,7 +15,7 @@ cmake --build build
 
 
 
-## How to usage?
+## How to use it?
 ```bash
 utree --help
 ```
