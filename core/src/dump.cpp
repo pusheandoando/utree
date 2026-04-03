@@ -2,6 +2,7 @@
 #include "utree/dump.hpp"
 
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <vector>
 
@@ -11,11 +12,12 @@
 
 namespace fs = std::filesystem;
 static constexpr std::size_t BINARY_PROBE_BYTES = 8192;
+static constexpr std::streamsize IO_CHUNK = 65536;
 
 namespace utree {
 static bool is_binary(const fs::path& path) {
     std::ifstream f(path, std::ios::binary);
-    
+
     if (!f) {
         return false;
     }
@@ -29,6 +31,14 @@ static bool is_binary(const fs::path& path) {
         }
     }
     return false;
+}
+
+static void copy_stream(std::ifstream& src, std::ostream& dst) {
+    std::array<char, IO_CHUNK> buf;
+
+    while (src.read(buf.data(), IO_CHUNK) || src.gcount() > 0) {
+        dst.write(buf.data(), src.gcount());
+    }
 }
 
 static TreeResult walk(
@@ -52,7 +62,7 @@ static TreeResult walk(
         if (!skip_canonical.empty()) {
             std::error_code ec;
             const auto canon = fs::canonical(e.path(), ec);
-            
+
             if (!ec && canon == skip_canonical) {
                 continue;
             }
@@ -88,9 +98,9 @@ static TreeResult walk(
             }
 
             std::ifstream f(entry.path());
-            
+
             if (f) {
-                out << f.rdbuf();
+                copy_stream(f, out);
             } else {
                 out << "[could not read file]\n";
             }

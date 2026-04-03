@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 project(utree
-    VERSION 1.0.0
+    VERSION 1.0.1
     DESCRIPTION "Universal Tree - directory explorer and file dumper"
     LANGUAGES CXX
 )
