@@ -2,10 +2,14 @@
 cmake_minimum_required(VERSION 3.17)
 
 project(utree
-    VERSION 1.0.1
-    DESCRIPTION "Universal Tree - directory explorer and file dumper"
+    DESCRIPTION "Universal Tree (utree)"
     LANGUAGES CXX
 )
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" UTREE_VERSION)
+string(STRIP "${UTREE_VERSION}" UTREE_VERSION)
+
+project(utree VERSION "${UTREE_VERSION}")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

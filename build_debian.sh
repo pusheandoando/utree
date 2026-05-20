@@ -8,7 +8,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="1.0.1"
+VERSION="$(cat "${SCRIPT_DIR}/VERSION")"
 PKG_NAME="utree"
 BUILD_DIR="${SCRIPT_DIR}/build"
 DIST_DIR="${SCRIPT_DIR}/dist"
@@ -55,4 +55,4 @@ rm -rf "${BUILD_DIR}"
 
 
 echo "[OK] package ready  ->  dist/${PKG_NAME}_${VERSION}.deb  (${VERSION})"
-echo "[OK] install with:  sudo dpkg -i dist/${PKG_NAME}_${VERSION}.deb"
+echo "[OK] install with:  sudo apt install ./dist/${PKG_NAME}_${VERSION}.deb"
