@@ -4,7 +4,7 @@ name: Release Linux
 on:
   push:
     branches:
-      - "v*"
+      - 'v*'
 
 jobs:
   release:
@@ -41,7 +41,7 @@ jobs:
 
       - name: Install build dependencies
         if: steps.check_tag.outputs.exists == 'false'
-        run: sudo apt install -y build-essential cmake dpkg
+        run: sudo apt-get install -y dpkg-dev
 
       - name: Build Linux binary
         if: steps.check_tag.outputs.exists == 'false'
