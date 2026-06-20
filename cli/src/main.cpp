@@ -17,10 +17,10 @@ static constexpr const char* kVersion = UTREE_VERSION;
 
 namespace fs = std::filesystem;
 
-
 static void print_help(const char* prog) {
     std::cout
         << "Universal Tree (utree) " << kVersion << " - Written by Christian (@pusheandoando)\n"
+        << "List and inspect files and directories in a specified filesystem location.\n"
         << '\n'
         << "Usage:\n"
         << "  " << prog << " <path> [options]\n"
@@ -37,7 +37,6 @@ static void print_help(const char* prog) {
         << '\n';
 }
 
-
 static void append_tokens(const std::string& raw, std::set<std::string>& out) {
     std::istringstream ss(raw);
     std::string token;
@@ -52,12 +51,15 @@ static void append_tokens(const std::string& raw, std::set<std::string>& out) {
     }
 }
 
-
 static std::string ensure_txt(const std::string& path) {
     const std::string suffix = ".txt";
-    return path + suffix;
-}
+    std::string base = path;
 
+    while (base.size() > suffix.size() && base.compare(base.size() - suffix.size(), suffix.size(), suffix) == 0) {
+        base.erase(base.size() - suffix.size());
+    }
+    return base + suffix;
+}
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {

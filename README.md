@@ -1,5 +1,5 @@
-# Universal Tree (utree) (v1.0.2)
-Tool to visualize directory structures and file contents. Written by Christian (@pusheandoando)
+# Universal Tree (utree) - v1.0.3
+List and inspect files and directories in a specified filesystem location. Written by Christian (@pusheandoando)
 
 
 
@@ -14,14 +14,14 @@ CMake 3.17+, GCC with C++17 support (GCC 8+). No external libraries needed.
 
 ## Build
 ```bash
-chmod +x build.sh
-./build.sh
+chmod +x scripts/linux/build.sh
+scripts/linux/build.sh
 ```
 
 ## Build a .deb package
 ```bash
-chmod +x build_debian.sh
-./build_debian.sh
+chmod +x scripts/linux/build_debian.sh
+scripts/linux/build_debian.sh
 ```
 
 
@@ -42,10 +42,6 @@ Options:
   -v, --version           Show version information
   -h, --help              Show this help message
 ```
-
-
-
-
 
 ### Visualize a directory tree
 ```bash
@@ -72,7 +68,6 @@ utree ~/my-project --dump -e "build,node_modules,*.o,*.a"
 utree ~/my-project --dump --output snapshot
 # writes to snapshot.txt
 ```
-
 
 ## Patterns
 `-i` and `-e` accept exact names and `*`-prefix glob patterns:
