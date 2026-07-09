@@ -2,12 +2,12 @@
 #include "utree/dump.hpp"
 #include "utree/tree.hpp"
 
-#include <filesystem>
+#include <set>
+#include <string>
+#include <sstream>
 #include <fstream>
 #include <iostream>
-#include <set>
-#include <sstream>
-#include <string>
+#include <filesystem>
 
 
 
@@ -58,6 +58,7 @@ static std::string ensure_txt(const std::string& path) {
     while (base.size() > suffix.size() && base.compare(base.size() - suffix.size(), suffix.size(), suffix) == 0) {
         base.erase(base.size() - suffix.size());
     }
+
     return base + suffix;
 }
 
@@ -127,6 +128,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "[!!] cannot open output file: " << output_path << '\n';
             return 1;
         }
+
         out = &file_out;
 
         std::error_code ec;
@@ -146,5 +148,6 @@ int main(int argc, char* argv[]) {
         *out << dirs << " directories, " << files << " files\n";
         out->flush();
     }
+
     return 0;
 }

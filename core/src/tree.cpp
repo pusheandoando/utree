@@ -1,8 +1,8 @@
 // core/src/tree.cpp
 #include "utree/tree.hpp"
 
-#include <algorithm>
 #include <vector>
+#include <algorithm>
 
 
 
@@ -27,8 +27,10 @@ static bool glob_match(const std::string& pattern, const std::string& name) {
         if (suffix.size() > name.size()) {
             return false;
         }
+        
         return name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0;
     }
+
     return pattern == name;
 }
 
@@ -38,6 +40,7 @@ static bool matches_any(const std::string& name, const std::set<std::string>& pa
             return true;
         }
     }
+
     return false;
 }
 
@@ -45,40 +48,44 @@ static bool is_glob(const std::string& pattern) {
     return pattern.find('*') != std::string::npos;
 }
 
-static bool file_included(
-    const std::string& name,
-    const std::set<std::string>& exclude,
-    const std::set<std::string>& include
-) {
-    if (matches_any(name, exclude)) {
-        return false;
-    }
-    
-    if (include.empty()) {
-        return true;
-    }
-    return matches_any(name, include);
-}
-
-static bool dir_included(
-    const std::string& name,
-    const std::set<std::string>& exclude,
-    const std::set<std::string>& include
-) {
-    if (matches_any(name, exclude)) {
-        return false;
-    }
-    
-    if (include.empty()) {
-        return true;
-    }
-    
+static bool is_exact_include_match(const std::string& name, const std::set<std::string>& include) {
     for (const auto& p : include) {
         if (!is_glob(p) && p == name) {
             return true;
         }
     }
-    return true;
+
+    return false;
+}
+
+static bool subtree_has_included_content(
+    const fs::path& dir,
+    const std::set<std::string>& exclude,
+    const std::set<std::string>& include
+) {
+    for (const auto& e : fs::directory_iterator(dir)) {
+        const std::string name = e.path().filename().string();
+
+        if (matches_any(name, exclude)) {
+            continue;
+        }
+
+        if (e.is_regular_file()) {
+            if (matches_any(name, include)) {
+                return true;
+            }
+        } else if (e.is_directory()) {
+            if (is_exact_include_match(name, include)) {
+                return true;
+            }
+
+            if (subtree_has_included_content(e.path(), exclude, include)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 static TreeResult walk_children(
@@ -86,7 +93,8 @@ static TreeResult walk_children(
     const std::set<std::string>& exclude,
     const std::set<std::string>& include,
     const std::string& prefix,
-    std::ostream& out
+    std::ostream& out,
+    bool force_include
 ) {
     int dir_count = 0;
     int file_count = 0;
@@ -97,13 +105,21 @@ static TreeResult walk_children(
     for (const auto& e : fs::directory_iterator(dir)) {
         const std::string name = e.path().filename().string();
 
-        if (e.is_directory()) {
-            if (!dir_included(name, exclude, include)) {
+        if (matches_any(name, exclude)) {
+            continue;
+        }
+
+        if (e.is_regular_file()) {
+            if (!force_include && !matches_any(name, include)) {
                 continue;
             }
-        } else if (e.is_regular_file()) {
-            if (!file_included(name, exclude, include)) {
-                continue;
+        } else if (e.is_directory()) {
+            if (!force_include) {
+                const bool exact_match = is_exact_include_match(name, include);
+                
+                if (!exact_match && !subtree_has_included_content(e.path(), exclude, include)) {
+                    continue;
+                }
             }
         }
 
@@ -122,6 +138,7 @@ static TreeResult walk_children(
             std::transform(s.begin(), s.end(), s.begin(), ::tolower);
             return s;
         };
+
         return lower(a.path().filename().string()) < lower(b.path().filename().string());
     });
 
@@ -135,13 +152,17 @@ static TreeResult walk_children(
 
         if (entries[i].is_directory()) {
             const std::string child_prefix = prefix + (is_last ? BLANK : PIPE);
-            auto [sub_dirs, sub_files] = walk_children(entries[i].path(), exclude, include, child_prefix, out);
+            const std::string entry_name = entries[i].path().filename().string();
+            const bool child_force = force_include || is_exact_include_match(entry_name, include);
+            auto [sub_dirs, sub_files] = walk_children(entries[i].path(), exclude, include, child_prefix, out, child_force);
+            
             dir_count += 1 + sub_dirs;
             file_count += sub_files;
         } else {
             ++file_count;
         }
     }
+
     return {dir_count, file_count};
 }
 
@@ -152,6 +173,7 @@ TreeResult print_tree(
     std::ostream& out
 ) {
     out << base.filename().string() << '\n';
-    return walk_children(base, exclude, include, "", out);
+    
+    return walk_children(base, exclude, include, "", out, include.empty());
 }
 }

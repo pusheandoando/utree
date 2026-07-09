@@ -1,4 +1,4 @@
-# Universal Tree (utree) - v1.0.4
+# Universal Tree (utree) - v1.0.5
 List and inspect files and directories in a specified filesystem location. Written by Christian (@pusheandoando)
 
 
