@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <fstream>
+#include <iomanip>
 #include <algorithm>
 
 
@@ -114,12 +115,51 @@ static void copy_stream(std::ifstream& src, std::ostream& dst) {
     }
 }
 
+static std::size_t count_lines(std::ifstream& src) {
+    std::size_t count = 0;
+    std::string line;
+
+    while (std::getline(src, line)) {
+        ++count;
+    }
+
+    return count;
+}
+
+static int digit_width(std::size_t value) {
+    int width = 1;
+
+    while (value >= 10) {
+        value /= 10;
+        ++width;
+    }
+
+    return width;
+}
+
+static void copy_stream_numbered(std::ifstream& src, std::ostream& dst) {
+    const std::size_t total_lines = count_lines(src);
+    const int width = digit_width(total_lines);
+
+    src.clear();
+    src.seekg(0);
+
+    std::string line;
+    std::size_t line_number = 1;
+
+    while (std::getline(src, line)) {
+        dst << std::setw(width) << line_number << "|" << line << '\n';
+        ++line_number;
+    }
+}
+
 static TreeResult walk(
     const fs::path& base,
     const fs::path& current,
     const std::set<std::string>& exclude,
     const std::set<std::string>& include,
     std::ostream& out,
+    DumpMode mode,
     const fs::path& skip_canonical,
     bool force_include
 ) {
@@ -166,6 +206,7 @@ static TreeResult walk(
     std::sort(entries.begin(), entries.end(), [](const fs::directory_entry& a, const fs::directory_entry& b) {
         auto lower = [](std::string s) -> std::string {
             std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+            
             return s;
         };
 
@@ -177,7 +218,7 @@ static TreeResult walk(
             ++dir_count;
             const std::string entry_name = entry.path().filename().string();
             const bool child_force = force_include || is_exact_include_match(entry_name, include);
-            auto [sub_dirs, sub_files] = walk(base, entry.path(), exclude, include, out, skip_canonical, child_force);
+            auto [sub_dirs, sub_files] = walk(base, entry.path(), exclude, include, out, mode, skip_canonical, child_force);
             
             dir_count += sub_dirs;
             file_count += sub_files;
@@ -197,10 +238,15 @@ static TreeResult walk(
             std::ifstream f(entry.path());
 
             if (f) {
-                copy_stream(f, out);
+                if (mode == DumpMode::Numbered) {
+                    copy_stream_numbered(f, out);
+                } else {
+                    copy_stream(f, out);
+                }
             } else {
                 out << "[could not read file]\n";
             }
+            
             out << '\n';
         }
     }
@@ -213,8 +259,9 @@ TreeResult dump_files(
     const std::set<std::string>& exclude,
     const std::set<std::string>& include,
     std::ostream& out,
+    DumpMode mode,
     const fs::path& skip_canonical
 ) {
-    return walk(base, base, exclude, include, out, skip_canonical, include.empty());
+    return walk(base, base, exclude, include, out, mode, skip_canonical, include.empty());
 }
 }

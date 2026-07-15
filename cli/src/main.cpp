@@ -30,7 +30,8 @@ static void print_help(const char* prog) {
         << "                          Can be specified multiple times\n"
         << "  -i, --include <items>   Comma-separated names/patterns to include exclusively\n"
         << "                          Can be specified multiple times\n"
-        << "  --dump                  Print file contents with relative paths and summary\n"
+        << "  --dump[=<mode>]         Print file contents with relative paths and summary\n"
+        << "                          mode is 'plain' (default) or 'numbered'\n"
         << "  --output <file>         Write output to a .txt file instead of stdout\n"
         << "  -v, --version           Show version information\n"
         << "  -h, --help              Show this help message\n"
@@ -72,6 +73,7 @@ int main(int argc, char* argv[]) {
     std::set<std::string> exclude;
     std::set<std::string> include;
     bool do_dump = false;
+    utree::DumpMode dump_mode = utree::DumpMode::Plain;
     std::string output_path;
 
     for (int i = 1; i < argc; ++i) {
@@ -85,6 +87,12 @@ int main(int argc, char* argv[]) {
             return 0;
         } else if (arg == "--dump") {
             do_dump = true;
+        } else if (arg == "--dump=plain") {
+            do_dump = true;
+            dump_mode = utree::DumpMode::Plain;
+        } else if (arg == "--dump=numbered") {
+            do_dump = true;
+            dump_mode = utree::DumpMode::Numbered;
         } else if ((arg == "-e" || arg == "--exclude") && i + 1 < argc) {
             append_tokens(argv[++i], exclude);
         } else if ((arg == "-i" || arg == "--include") && i + 1 < argc) {
@@ -137,7 +145,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (do_dump) {
-        const auto [dirs, files] = utree::dump_files(base, exclude, include, *out, output_canonical);
+        const auto [dirs, files] = utree::dump_files(base, exclude, include, *out, dump_mode, output_canonical);
         out->flush();
         *out << '\n' << '\n';
         *out << dirs << " directories, " << files << " files\n";

@@ -1,4 +1,4 @@
-# Universal Tree (utree) - v1.0.5
+# Universal Tree (utree) - v1.0.6
 List and inspect files and directories in a specified filesystem location. Written by Christian (@pusheandoando)
 
 
@@ -37,7 +37,8 @@ Options:
                           Can be specified multiple times
   -i, --include <items>   Comma-separated names/patterns to include exclusively
                           Can be specified multiple times
-  --dump                  Print file contents with relative paths and summary
+  --dump[=<mode>]         Print file contents with relative paths and summary
+                          mode is 'plain' (default) or 'numbered'
   --output <file>         Write output to a .txt file instead of stdout
   -v, --version           Show version information
   -h, --help              Show this help message
@@ -52,6 +53,18 @@ utree ~/my-project
 ```bash
 utree ~/my-project --dump
 ```
+
+### Dump file contents with line numbers
+```bash
+utree ~/my-project --dump=numbered
+```
+Prepends each line with its line number, right-aligned to the width of the file's last line number:
+```
+1|import os
+2|import sys
+3|print("hi")
+```
+`--dump` and `--dump=plain` are equivalent and print raw content with no line numbers.
 
 ### Dump only specific files and folders
 ```bash
